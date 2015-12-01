@@ -2170,8 +2170,12 @@ module Sequel
           ensure_associated_primary_key(opts, o, *args)
           return if run_association_callbacks(opts, :before_add, o) == false
           return if !send(opts._add_method, o, *args) && opts.handle_silent_modification_failure?
-          if array = associations[opts[:name]] and !array.include?(o)
+          assoc = opts[:name]
+          if array = associations[assoc] and !array.include?(o)
             array.push(o)
+          end
+          associations.delete_if do |other_assoc|
+            association_reflection(other_assoc)[:depends_on] == assoc
           end
           add_reciprocal_object(opts, o)
           run_association_callbacks(opts, :after_add, o)
